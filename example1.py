@@ -11,7 +11,7 @@ import arcade
 import random
 
 # Set up the constants
-SCREEN_WIDTH = 700
+SCREEN_WIDTH = 750
 SCREEN_HEIGHT = 600
 
 RECT_WIDTH = 60
