@@ -30,6 +30,11 @@ class Registry:
                 return False
         return True
 
+    # def add_entity(self, **components):
+    #     entity_id = self.create_entity_id()
+    #     for component_id, component in components.items():
+    #         self.add(entity_id, component_id, component)
+
     def add(self, entity_id, component_id, component):
         self.components[component_id][entity_id] = component
         for system in self.component_to_systems[component_id]:
@@ -41,7 +46,7 @@ class Registry:
             system.remove(self, entity_id)
 
     def lists(self, entity_ids, component_ids):
-        result = []
+        result = [entity_ids]
         for component_id in component_ids:
             all_components = self.components[component_id]
             result.append([all_components[entity_id]
@@ -60,7 +65,7 @@ class System:
         self.entity_ids = set()
 
     def query(self, registry):
-        return registry.lists(self.entity_ids, self.component_ids)
+        return registry.lists(list(self.entity_ids), self.component_ids)
 
     def execute(self, update, registry):
         self.func(update, *self.query(registry))
