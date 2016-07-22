@@ -60,9 +60,11 @@ class System:
         self.func = func
         self.component_ids = component_ids
 
+    def query(self, registry):
+        return registry.query(self.component_ids)
+
     def execute(self, registry):
-        lists = registry.query(self.component_ids)
-        self.func(*lists)
+        self.func(*self.query(registry))
 
 
 def item_func(func, *lists):
