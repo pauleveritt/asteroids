@@ -10,17 +10,11 @@ class Registry:
     def register_component(self, component_id):
         self.components[component_id] = {}
 
-    def register_system(self, func, component_ids):
+    def register_system(self, system):
         # XXX add topological sort options so you can design system
         # execution order where this matters
-        system = System(func, component_ids)
         self.systems.append(system)
-        self.update_component_to_systems(system, component_ids)
-
-    def register_system_item(self, func, component_ids):
-        system = System(partial(item_func, func), component_ids)
-        self.systems.append(system)
-        self.update_component_to_systems(system, component_ids)
+        self.update_component_to_systems(system, system.component_ids)
 
     def update_component_to_systems(self, system, component_ids):
         for component_id in component_ids:
@@ -83,3 +77,7 @@ class System:
 def item_func(func, *lists):
     for items in zip(*lists):
         func(*items)
+
+
+def item_system(func, component_ids):
+    return System(partial(item_func, func), component_ids)
