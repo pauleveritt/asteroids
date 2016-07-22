@@ -22,19 +22,20 @@ def test_registry_system():
 
     p1 = Position(10)
     p2 = Position(20)
+    p3 = Position(40)
 
     r.add(1, 'position', p1)
     r.add(2, 'position', p2)
+    r.add(3, 'position', p3)
 
     v1 = Velocity(1)
     v2 = Velocity(5)
+    v4 = Velocity(10)
 
     r.add(1, 'velocity', v1)
     r.add(2, 'velocity', v2)
+    r.add(4, 'velocity', v4)
 
-    assert sorted(r.entity_ids(['position', 'velocity'])) == [1, 2]
-
-    assert r.query(['position', 'velocity']) == [[p1, p2], [v1, v2]]
     assert r.get(1, 'position').x == 10
     assert r.get(2, 'position').x == 20
 
@@ -67,19 +68,20 @@ def test_registry_system_item():
 
     p1 = Position(10)
     p2 = Position(20)
+    p3 = Position(40)
 
     r.add(1, 'position', p1)
     r.add(2, 'position', p2)
+    r.add(3, 'position', p3)
 
     v1 = Velocity(1)
     v2 = Velocity(5)
+    v4 = Velocity(10)
 
     r.add(1, 'velocity', v1)
     r.add(2, 'velocity', v2)
+    r.add(4, 'velocity', v4)
 
-    assert sorted(r.entity_ids(['position', 'velocity'])) == [1, 2]
-
-    assert r.query(['position', 'velocity']) == [[p1, p2], [v1, v2]]
     assert r.get(1, 'position').x == 10
     assert r.get(2, 'position').x == 20
 
