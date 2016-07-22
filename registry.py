@@ -48,9 +48,9 @@ class Registry:
                            for entity_id in entity_ids])
         return result
 
-    def execute(self):
+    def execute(self, update):
         for system in self.systems:
-            system.execute(self)
+            system.execute(update, self)
 
 
 class System:
@@ -62,8 +62,8 @@ class System:
     def query(self, registry):
         return registry.lists(self.entity_ids, self.component_ids)
 
-    def execute(self, registry):
-        self.func(*self.query(registry))
+    def execute(self, update, registry):
+        self.func(update, *self.query(registry))
 
     def add(self, registry, entity_id):
         if not registry.has_components(entity_id, self.component_ids):
@@ -74,9 +74,9 @@ class System:
         self.entity_ids.remove(entity_id)
 
 
-def item_func(func, *lists):
+def item_func(func, update, *lists):
     for items in zip(*lists):
-        func(*items)
+        func(update, *items)
 
 
 def item_system(func, component_ids):

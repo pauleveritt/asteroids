@@ -6,7 +6,8 @@ def test_registry_system():
     r.register_component('position')
     r.register_component('velocity')
 
-    def update_position(positions, velocities):
+    def update_position(update, positions, velocities):
+        assert update == 'update'
         for position, velocity in zip(positions, velocities):
             position.x += velocity.speed
 
@@ -42,7 +43,7 @@ def test_registry_system():
     assert r.get(1, 'velocity').speed == 1
     assert r.get(2, 'velocity').speed == 5
 
-    r.execute()
+    r.execute('update')
 
     assert r.get(1, 'position').x == 11
     assert r.get(2, 'position').x == 25
@@ -53,7 +54,8 @@ def test_registry_system_item():
     r.register_component('position')
     r.register_component('velocity')
 
-    def update_position(position, velocity):
+    def update_position(update, position, velocity):
+        assert update == 'update'
         position.x += velocity.speed
 
     r.register_system(item_system(update_position, ['position', 'velocity']))
@@ -88,7 +90,7 @@ def test_registry_system_item():
     assert r.get(1, 'velocity').speed == 1
     assert r.get(2, 'velocity').speed == 5
 
-    r.execute()
+    r.execute('update')
 
     assert r.get(1, 'position').x == 11
     assert r.get(2, 'position').x == 25
@@ -99,7 +101,7 @@ def test_registry_system_add_remove():
     r.register_component('position')
     r.register_component('velocity')
 
-    def update(positions, velocities):
+    def update(update, positions, velocities):
         pass
 
     s = System(update, ['position', 'velocity'])
