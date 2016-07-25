@@ -130,11 +130,6 @@ class Registry:
         return [self.components[component_id]
                 for component_id in component_ids]
 
-    def lists(self, entity_ids, component_ids):
-        return [component_container.list(entity_ids)
-                for component_container
-                in self.component_containers(component_ids)]
-
     def execute(self, update):
         for system in self.systems:
             system.execute(update, self)
@@ -145,7 +140,8 @@ def container_query(registry, entity_ids, component_ids):
 
 
 def entity_ids_query(registry, entity_ids, component_ids):
-    return registry.lists(entity_ids, component_ids)
+    return [container.list(entity_ids) for container in
+            registry.component_containers(component_ids)]
 
 
 class System:
