@@ -1,4 +1,4 @@
-from registry import Registry, System, item_system
+from ecs.registry import Registry, System, item_system
 
 
 def test_registry_system():
