@@ -110,12 +110,13 @@ class Registry:
     def add(self, entity_id, component_id, component):
         self.components[component_id][entity_id] = component
         for system in self.component_to_systems[component_id]:
-            system.track(self, entity_id)
+            if self.has_components(entity_id, system.component_ids):
+                system.track(entity_id)
 
     def remove(self, entity_id, component_id):
         del self.components[component_id][entity_id]
         for system in self.component_to_systems[component_id]:
-            system.forget(self, entity_id)
+            system.forget(entity_id)
 
     def component_containers(self, component_ids):
         return [self.components[component_id]
@@ -150,12 +151,10 @@ class System:
                 self.query(component_containers, list(self.entity_ids)))
         self.func(update, *args)
 
-    def track(self, registry, entity_id):
-        if not registry.has_components(entity_id, self.component_ids):
-            return
+    def track(self, entity_id):
         self.entity_ids.add(entity_id)
 
-    def forget(self, registry, entity_id):
+    def forget(self, entity_id):
         self.entity_ids.remove(entity_id)
 
 
