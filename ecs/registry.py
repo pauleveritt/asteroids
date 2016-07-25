@@ -3,18 +3,6 @@ import pandas as pd
 
 
 class DictContainer(dict):
-    def add(self, entity_id, component):
-        self[entity_id] = component
-
-    def remove(self, entity_id):
-        del self[entity_id]
-
-    def get(self, entity_id):
-        return self[entity_id]
-
-    def contains(self, entity_id):
-        return entity_id in self
-
     def value(self):
         return self
 
