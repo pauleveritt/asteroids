@@ -3,11 +3,28 @@ import pandas as pd
 
 
 class DictContainer(dict):
+    """Component container backed by dict.
+
+    This is in fact a Python dict.
+    """
     def value(self):
+        """Get the underlying container object.
+        """
         return self
 
 
 class DataFrameContainer:
+    """Component container backed by pandas DataFrame.
+
+    This can give a performance boost when you have a large
+    amount of components and you use vectorized functionality to query
+    and update components.
+
+    adds and removes are buffered for efficiency, only once
+    the container is accessed for its value is the buffer flushed;
+    typically this happens before the next system runs that requires
+    this component container.
+    """
     def __init__(self):
         self.df = pd.DataFrame([])
         self.to_add_entity_ids = []
@@ -55,11 +72,15 @@ class DataFrameContainer:
                 entity_id in self.to_add_entity_ids)
 
     def value(self):
+        """Backing value is a pandas DataFrame
+        """
         self._complete()
         return self.df
 
 
 class Registry:
+    """Entity component system registry.
+    """
     def __init__(self):
         self.components = {}
         self.systems = []
@@ -67,71 +88,115 @@ class Registry:
         self.entity_id_counter = 0
 
     def register_component(self, component_id, container=None):
+        """Register a component container that contains components.
+        """
         if container is None:
             container = DictContainer()
         self.components[component_id] = container
         self.component_to_systems[component_id] = []
 
     def register_system(self, system):
+        """Register a system that processes components.
+        """
         # XXX add topological sort options so you can design system
         # execution order where this matters
         self.systems.append(system)
-        self.update_component_to_systems(system, system.component_ids)
+        self._update_component_to_systems(system, system.component_ids)
 
-    def update_component_to_systems(self, system, component_ids):
+    def _update_component_to_systems(self, system, component_ids):
+        """Maintain map of component_ids to systems that are interested.
+        """
         for component_id in component_ids:
             self.component_to_systems.setdefault(component_id, []).append(
                 system)
 
     def has_components(self, entity_id, component_ids):
+        """Check whether an entity has the listed component_ids.
+        """
         for component_id in component_ids:
             if entity_id not in self.components[component_id]:
                 return False
         return True
 
     def get(self, entity_id, component_id):
+        """Get a specific component for an entity.
+
+        KeyError if this component doesn't exist for this entity.
+        """
         return self.components[component_id][entity_id]
 
     def create_entity_id(self):
+        """Create a new entity id.
+        """
         result = self.entity_id_counter
         self.entity_id_counter += 1
         return result
 
     def add_entity(self, **components):
+        """Add a new entity with a bunch of associated components.
+        """
         entity_id = self.create_entity_id()
         self.add_components(entity_id, **components)
         return entity_id
 
     def add_components(self, entity_id, **components):
+        """Add a bunch of components for an entity.
+        """
         for component_id, component in components.items():
             self.add_component(entity_id, component_id, component)
 
     def add_component(self, entity_id, component_id, component):
+        """Add a component to an entity.
+
+        This makes sure all interested systems track this entity.
+        """
         self.components[component_id][entity_id] = component
         for system in self.component_to_systems[component_id]:
             if self.has_components(entity_id, system.component_ids):
                 system.track(entity_id)
 
     def remove_component(self, entity_id, component_id):
+        """Remove a component from an entity.
+
+        This makes sure interested systems stop tracking this entity.
+        """
         del self.components[component_id][entity_id]
         for system in self.component_to_systems[component_id]:
             system.forget(entity_id)
 
     def component_containers(self, component_ids):
+        """Get component containers.
+        """
         return [self.components[component_id]
                 for component_id in component_ids]
 
+    # XXX there should be two arguments: update and registry, i.e. the
+    # API where you can add and remove components, as we always want
+    # the latter anyway
     def execute(self, update):
+        """Execute all systems.
+
+        The update argument is passed through to all systems. It can
+        contain information about the current state of the game, including
+        an API to add components.
+        """
         for system in self.systems:
             containers = self.component_containers(system.component_ids)
             system.execute(update, containers)
 
 
 def container_query(component_containers, entity_ids):
+    """Just return the complete component containers.
+
+    This returns the entire component containers and the system
+    is responsible itself to get out the proper entities.
+    """
     return [container.value() for container in component_containers]
 
 
 def entity_ids_query(component_containers, entity_ids):
+    """Return entries in component_containers that match entity ids.
+    """
     return [[container[entity_id] for entity_id in entity_ids]
             for container in component_containers]
 
@@ -139,21 +204,38 @@ def entity_ids_query(component_containers, entity_ids):
 class System:
     # XXX make query a dict and let it determine per component what to
     # retrieve, so we can mix different component containers
+    # Or could we base this on the kind of container is set up in the
+    # registry for each component id?
+    # what does the developer want when mixing container types?
     def __init__(self, func, component_ids, query=entity_ids_query):
+        """
+
+        :param func: a function that takes the update and component
+          container arguments and updates the state accordingly.
+        :param component_ids: the component ids that this system cares about.
+        :param query: how exactly to pass in component_ids
+        """
         self.func = func
         self.component_ids = component_ids
         self.query = query
         self.entity_ids = set()
 
     def execute(self, update, component_containers):
+        """Execute this system.
+
+        Passed in are the component containers that this system can
+        consult and update.
+        """
         args = ([self.entity_ids] +
                 self.query(component_containers, list(self.entity_ids)))
         self.func(update, *args)
 
     def track(self, entity_id):
+        """Track entity_id with this system."""
         self.entity_ids.add(entity_id)
 
     def forget(self, entity_id):
+        """Stop tracking entity_id with this system."""
         self.entity_ids.remove(entity_id)
 
 
@@ -163,4 +245,6 @@ def item_func(func, update, *lists):
 
 
 def item_system(func, component_ids):
+    """A system where you update individual items, not collections of them.
+    """
     return System(partial(item_func, func), component_ids)
