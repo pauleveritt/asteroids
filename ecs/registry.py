@@ -123,17 +123,17 @@ class Registry:
 
     def execute(self, update):
         for system in self.systems:
-            system.execute(update, self)
+            containers = self.component_containers(system.component_ids)
+            system.execute(update, containers)
 
 
-def container_query(registry, entity_ids, component_ids):
-    return [container.value()
-            for container in registry.component_containers(component_ids)]
+def container_query(component_containers, entity_ids):
+    return [container.value() for container in component_containers]
 
 
-def entity_ids_query(registry, entity_ids, component_ids):
+def entity_ids_query(component_containers, entity_ids):
     return [[container[entity_id] for entity_id in entity_ids]
-            for container in registry.component_containers(component_ids)]
+            for container in component_containers]
 
 
 class System:
@@ -145,9 +145,9 @@ class System:
         self.query = query
         self.entity_ids = set()
 
-    def execute(self, update, registry):
-        args = [self.entity_ids] + self.query(registry, list(self.entity_ids),
-                                              self.component_ids)
+    def execute(self, update, component_containers):
+        args = ([self.entity_ids] +
+                self.query(component_containers, list(self.entity_ids)))
         self.func(update, *args)
 
     def track(self, registry, entity_id):
