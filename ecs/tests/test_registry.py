@@ -1,5 +1,5 @@
 from ecs.registry import (Registry, System, item_system,
-                          DataFrameContainer)
+                          DataFrameContainer, container_query)
 
 
 def test_registry_system_dict():
@@ -53,7 +53,10 @@ def test_registry_system_df():
         assert sorted(entity_ids) == [1, 2]
         positions.loc[entity_ids, 'x'] += velocities.loc[entity_ids, 'speed']
 
-    r.register_system(System(update_position, ['position', 'velocity']))
+    r.register_system(System(
+        update_position,
+        ['position', 'velocity'],
+        container_query))
 
     p1 = {'x': 10}
     p2 = {'x': 20}

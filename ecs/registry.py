@@ -18,10 +18,6 @@ class DictContainer:
     def contains(self, entity_id):
         return entity_id in self.d
 
-    def list(self, entity_ids):
-        d = self.d
-        return [d[entity_id] for entity_id in entity_ids]
-
 
 class DataFrameContainer:
     def __init__(self):
@@ -70,13 +66,8 @@ class DataFrameContainer:
         return (entity_id in self.df.index or
                 entity_id in self.to_add_entity_ids)
 
-    def list(self, entity_ids):
+    def value(self):
         self._complete()
-        # we ignore entity_ids here, as we need to return
-        # the original dfs to the function. This implies a system
-        # at an even higher level which just takes the entire dfs
-        # of components to update along with the entity_ids that match and
-        # handles it there
         return self.df
 
 
@@ -136,12 +127,13 @@ class Registry:
 
 
 def container_query(registry, entity_ids, component_ids):
-    return registry.component_containers(component_ids)
+    return [container.value()
+            for container in registry.component_containers(component_ids)]
 
 
 def entity_ids_query(registry, entity_ids, component_ids):
-    return [container.list(entity_ids) for container in
-            registry.component_containers(component_ids)]
+    return [[container.get(entity_id) for entity_id in entity_ids]
+            for container in registry.component_containers(component_ids)]
 
 
 class System:
