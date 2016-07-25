@@ -141,11 +141,11 @@ class Registry:
 
 
 def container_query(registry, entity_ids, component_ids):
-    return [entity_ids] + registry.component_containers(component_ids)
+    return registry.component_containers(component_ids)
 
 
 def entity_ids_query(registry, entity_ids, component_ids):
-    return [entity_ids] + registry.lists(entity_ids, component_ids)
+    return registry.lists(entity_ids, component_ids)
 
 
 class System:
@@ -156,9 +156,9 @@ class System:
         self.entity_ids = set()
 
     def execute(self, update, registry):
-        self.func(
-            update,
-            *self.query(registry, list(self.entity_ids), self.component_ids))
+        args = [self.entity_ids] + self.query(registry, list(self.entity_ids),
+                                              self.component_ids)
+        self.func(update, *args)
 
     def track(self, registry, entity_id):
         if not registry.has_components(entity_id, self.component_ids):
