@@ -1,3 +1,4 @@
+import pytest
 from ecs.registry import (Registry, System, item_system,
                           DataFrameContainer, container_query)
 
@@ -120,7 +121,6 @@ def test_registry_system_dict_add_entity():
     assert r.get(0, 'position')['x'] == 11
     assert r.get(1, 'position')['x'] == 25
     assert r.get(2, 'position')['x'] == 40
-
 
 
 def test_registry_system_df():
@@ -262,7 +262,37 @@ def test_registry_system_add_remove():
     assert s.entity_ids == set([2])
 
 
-# def test_registry_explosion():
+def test_registry_collision():
+    r = Registry()
+    r.register_component('position')
+    r.register_component('size')
+    r.register_component('collision')
+
+    def update_collision(update, entity_ids, position, size):
+        # stupidly inefficient
+        for e1, p1, s1 in zip(entity_ids, position, size):
+            for e2, p2, s2 in zip(entity_ids, position, size):
+                if e1 == e2:
+                    continue
+                if (p2['x'] + s2['s']) > (p1['x'] - s1['s']) and\
+                   (p2['x'] - s2['s']) < (p1['x'] + s1['s']):
+                    update.add_component(e1, 'collision', {'other': e2})
+
+    r.register_system(System(update_collision, ['position', 'size']))
+
+    e0 = r.add_entity(position={'x': 10}, size={'s': 5})
+    e1 = r.add_entity(position={'x': 20}, size={'s': 5})
+    e2 = r.add_entity(position={'x': 23}, size={'s': 5})
+
+    r.execute(r)
+
+    with pytest.raises(KeyError):
+        r.get(e0, 'collision')
+
+    assert r.get(e1, 'collision')['other'] == e2
+    assert r.get(e2, 'collision')['other'] == e1
+
+                     # def test_registry_explosion():
 #     r = Registry()
 #     r.register_component('position')
 #     r.register_component('collision')

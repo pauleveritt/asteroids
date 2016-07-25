@@ -82,6 +82,7 @@ class Registry:
         if container is None:
             container = DictContainer()
         self.components[component_id] = container
+        self.component_to_systems[component_id] = []
 
     def register_system(self, system):
         # XXX add topological sort options so you can design system
