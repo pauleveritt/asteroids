@@ -3,7 +3,6 @@ import pandas as pd
 
 
 class DictContainer(dict):
-
     def add(self, entity_id, component):
         self[entity_id] = component
 
@@ -27,11 +26,11 @@ class DataFrameContainer:
         self.to_add_components = []
         self.to_remove_entity_ids = []
 
-    def add(self, entity_id, component):
+    def __setitem__(self, entity_id, component):
         self.to_add_entity_ids.append(entity_id)
         self.to_add_components.append(component)
 
-    def remove(self, entity_id):
+    def __delitem__(self, entity_id):
         self.to_remove.append(entity_id)
 
     def _complete(self):
@@ -55,11 +54,11 @@ class DataFrameContainer:
     def _create(self, components, entity_ids):
         return pd.DataFrame(components, index=entity_ids)
 
-    def get(self, entity_id):
+    def __getitem__(self, entity_id):
         self._complete()
         return self.df.loc[entity_id]
 
-    def contains(self, entity_id):
+    def __contains__(self, entity_id):
         # cannot call self._complete here as we do not want
         # to trigger it during tracking checks
         if entity_id in self.to_remove_entity_ids:
@@ -96,12 +95,12 @@ class Registry:
 
     def has_components(self, entity_id, component_ids):
         for component_id in component_ids:
-            if not self.components[component_id].contains(entity_id):
+            if entity_id not in self.components[component_id]:
                 return False
         return True
 
     def get(self, entity_id, component_id):
-        return self.components[component_id].get(entity_id)
+        return self.components[component_id][entity_id]
 
     # def add_entity(self, **components):
     #     entity_id = self.create_entity_id()
@@ -109,12 +108,12 @@ class Registry:
     #         self.add(entity_id, component_id, component)
 
     def add(self, entity_id, component_id, component):
-        self.components[component_id].add(entity_id, component)
+        self.components[component_id][entity_id] = component
         for system in self.component_to_systems[component_id]:
             system.track(self, entity_id)
 
     def remove(self, entity_id, component_id):
-        self.components[component_id].remove(entity_id)
+        del self.components[component_id][entity_id]
         for system in self.component_to_systems[component_id]:
             system.forget(self, entity_id)
 
@@ -133,7 +132,7 @@ def container_query(registry, entity_ids, component_ids):
 
 
 def entity_ids_query(registry, entity_ids, component_ids):
-    return [[container.get(entity_id) for entity_id in entity_ids]
+    return [[container[entity_id] for entity_id in entity_ids]
             for container in registry.component_containers(component_ids)]
 
 
