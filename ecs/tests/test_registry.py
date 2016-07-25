@@ -41,6 +41,7 @@ def test_registry_system_dict():
 
     assert r.get(1, 'position')['x'] == 11
     assert r.get(2, 'position')['x'] == 25
+    assert r.get(3, 'position')['x'] == 40
 
 
 def test_registry_system_df():
@@ -84,6 +85,7 @@ def test_registry_system_df():
 
     assert r.get(1, 'position')['x'] == 11
     assert r.get(2, 'position')['x'] == 25
+    assert r.get(3, 'position')['x'] == 40
 
 
 def test_registry_system_item():
