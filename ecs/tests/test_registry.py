@@ -262,7 +262,7 @@ def test_registry_system_add_remove():
     assert s.entity_ids == set([2])
 
 
-def test_registry_collision():
+def test_registry_collision_dict():
     r = Registry()
     r.register_component('position')
     r.register_component('size')
@@ -279,6 +279,45 @@ def test_registry_collision():
                     update.add_component(e1, 'collision', {'other': e2})
 
     r.register_system(System(update_collision, ['position', 'size']))
+
+    e0 = r.add_entity(position={'x': 10}, size={'s': 5})
+    e1 = r.add_entity(position={'x': 20}, size={'s': 5})
+    e2 = r.add_entity(position={'x': 23}, size={'s': 5})
+
+    r.execute(r)
+
+    with pytest.raises(KeyError):
+        r.get(e0, 'collision')
+
+    assert r.get(e1, 'collision')['other'] == e2
+    assert r.get(e2, 'collision')['other'] == e1
+
+
+def test_registry_collision_df():
+    r = Registry()
+    r.register_component('position', DataFrameContainer())
+    r.register_component('size', DataFrameContainer())
+    r.register_component('collision', DataFrameContainer())
+
+    def update_collision(update, entity_ids, position, size):
+        # even more stupidly inefficient
+        for e1 in entity_ids:
+            p1 = position.loc[e1]
+            s1 = size.loc[e1]
+            for e2 in entity_ids:
+                if e1 == e2:
+                    continue
+                p2 = position.loc[e2]
+                s2 = size.loc[e2]
+                if (p2['x'] + s2['s']) > (p1['x'] - s1['s']) and\
+                   (p2['x'] - s2['s']) < (p1['x'] + s1['s']):
+                    update.add_component(e1, 'collision', {'other': e2})
+
+    r.register_system(System(
+        update_collision,
+        ['position', 'size'],
+        container_query
+    ))
 
     e0 = r.add_entity(position={'x': 10}, size={'s': 5})
     e1 = r.add_entity(position={'x': 20}, size={'s': 5})
