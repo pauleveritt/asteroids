@@ -1,7 +1,8 @@
-from ecs.registry import Registry, System, item_system
+from ecs.registry import (Registry, System, item_system,
+                          DataFrameContainer)
 
 
-def test_registry_system():
+def test_registry_system_dict():
     r = Registry()
     r.register_component('position')
     r.register_component('velocity')
@@ -10,44 +11,76 @@ def test_registry_system():
         assert update == 'update'
         assert sorted(entity_ids) == [1, 2]
         for position, velocity in zip(positions, velocities):
-            position.x += velocity.speed
+            position['x'] += velocity['speed']
 
     r.register_system(System(update_position, ['position', 'velocity']))
 
-    class Position:
-        def __init__(self, x):
-            self.x = x
-
-    class Velocity:
-        def __init__(self, speed):
-            self.speed = speed
-
-    p1 = Position(10)
-    p2 = Position(20)
-    p3 = Position(40)
+    p1 = {'x': 10}
+    p2 = {'x': 20}
+    p3 = {'x': 40}
 
     r.add(1, 'position', p1)
     r.add(2, 'position', p2)
     r.add(3, 'position', p3)
 
-    v1 = Velocity(1)
-    v2 = Velocity(5)
-    v4 = Velocity(10)
+    v1 = {'speed': 1}
+    v2 = {'speed': 5}
+    v4 = {'speed': 10}
 
     r.add(1, 'velocity', v1)
     r.add(2, 'velocity', v2)
     r.add(4, 'velocity', v4)
 
-    assert r.get(1, 'position').x == 10
-    assert r.get(2, 'position').x == 20
+    assert r.get(1, 'position')['x'] == 10
+    assert r.get(2, 'position')['x'] == 20
 
-    assert r.get(1, 'velocity').speed == 1
-    assert r.get(2, 'velocity').speed == 5
+    assert r.get(1, 'velocity')['speed'] == 1
+    assert r.get(2, 'velocity')['speed'] == 5
 
     r.execute('update')
 
-    assert r.get(1, 'position').x == 11
-    assert r.get(2, 'position').x == 25
+    assert r.get(1, 'position')['x'] == 11
+    assert r.get(2, 'position')['x'] == 25
+
+
+def test_registry_system_df():
+    r = Registry()
+    r.register_component('position', DataFrameContainer())
+    r.register_component('velocity', DataFrameContainer())
+
+    def update_position(update, entity_ids, positions, velocities):
+        assert update == 'update'
+        assert sorted(entity_ids) == [1, 2]
+        positions.loc[entity_ids, 'x'] += velocities.loc[entity_ids, 'speed']
+
+    r.register_system(System(update_position, ['position', 'velocity']))
+
+    p1 = {'x': 10}
+    p2 = {'x': 20}
+    p3 = {'x': 40}
+
+    r.add(1, 'position', p1)
+    r.add(2, 'position', p2)
+    r.add(3, 'position', p3)
+
+    v1 = {'speed': 1}
+    v2 = {'speed': 5}
+    v4 = {'speed': 10}
+
+    r.add(1, 'velocity', v1)
+    r.add(2, 'velocity', v2)
+    r.add(4, 'velocity', v4)
+
+    assert r.get(1, 'position')['x'] == 10
+    assert r.get(2, 'position')['x'] == 20
+
+    assert r.get(1, 'velocity')['speed'] == 1
+    assert r.get(2, 'velocity')['speed'] == 5
+
+    r.execute('update')
+
+    assert r.get(1, 'position')['x'] == 11
+    assert r.get(2, 'position')['x'] == 25
 
 
 def test_registry_system_item():

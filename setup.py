@@ -19,6 +19,7 @@ setup(
     install_requires=[
         'setuptools',
         'dectate',
+        'pandas',
     ],
     extras_require=dict(
         test=[

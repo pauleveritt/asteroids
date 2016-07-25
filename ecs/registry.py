@@ -1,4 +1,83 @@
 from functools import partial
+import pandas as pd
+
+
+class DictContainer:
+    def __init__(self):
+        self.d = {}
+
+    def add(self, entity_id, component):
+        self.d[entity_id] = component
+
+    def remove(self, entity_id):
+        del self.d[entity_id]
+
+    def get(self, entity_id):
+        return self.d[entity_id]
+
+    def contains(self, entity_id):
+        return entity_id in self.d
+
+    def list(self, entity_ids):
+        d = self.d
+        return [d[entity_id] for entity_id in entity_ids]
+
+
+class DataFrameContainer:
+    def __init__(self):
+        self.df = pd.DataFrame([])
+        self.to_add_entity_ids = []
+        self.to_add_components = []
+        self.to_remove_entity_ids = []
+
+    def add(self, entity_id, component):
+        self.to_add_entity_ids.append(entity_id)
+        self.to_add_components.append(component)
+
+    def remove(self, entity_id):
+        self.to_remove.append(entity_id)
+
+    def _complete(self):
+        self._complete_remove()
+        self._complete_add()
+
+    def _complete_add(self):
+        if not self.to_add_entity_ids:
+            return
+        add_df = self._create(self.to_add_components,
+                              self.to_add_entity_ids)
+        self.df = pd.concat([self.df, add_df])
+        self.to_add_entity_ids = []
+        self.to_add_components = []
+
+    def _complete_remove(self):
+        if not self.to_remove_entity_ids:
+            return
+        self.df = self.df.drop(self.to_remove_entity_ids)
+
+    def _create(self, components, entity_ids):
+        return pd.DataFrame(components, index=entity_ids)
+
+    def get(self, entity_id):
+        self._complete()
+        return self.df.loc[entity_id]
+
+    def contains(self, entity_id):
+        # cannot call self._complete here as we do not want
+        # to trigger it during tracking checks
+        if entity_id in self.to_remove_entity_ids:
+            return False
+        return (entity_id in self.df.index or
+                entity_id in self.to_add_entity_ids)
+
+    def list(self, entity_ids):
+        self._complete()
+        # we ignore entity_ids here, as we need to return
+        # the original dfs to the function. This implies a system
+        # at an even higher level which just takes the entire dfs
+        # of components to update along with the entity_ids that match and
+        # handles it there
+        return self.df
 
 
 class Registry:
@@ -7,8 +86,10 @@ class Registry:
         self.systems = []
         self.component_to_systems = {}
 
-    def register_component(self, component_id):
-        self.components[component_id] = {}
+    def register_component(self, component_id, container=None):
+        if container is None:
+            container = DictContainer()
+        self.components[component_id] = container
 
     def register_system(self, system):
         # XXX add topological sort options so you can design system
@@ -21,14 +102,14 @@ class Registry:
             self.component_to_systems.setdefault(component_id, []).append(
                 system)
 
-    def get(self, entity_id, component_id):
-        return self.components[component_id][entity_id]
-
     def has_components(self, entity_id, component_ids):
         for component_id in component_ids:
-            if entity_id not in self.components[component_id]:
+            if not self.components[component_id].contains(entity_id):
                 return False
         return True
+
+    def get(self, entity_id, component_id):
+        return self.components[component_id].get(entity_id)
 
     # def add_entity(self, **components):
     #     entity_id = self.create_entity_id()
@@ -36,21 +117,19 @@ class Registry:
     #         self.add(entity_id, component_id, component)
 
     def add(self, entity_id, component_id, component):
-        self.components[component_id][entity_id] = component
+        self.components[component_id].add(entity_id, component)
         for system in self.component_to_systems[component_id]:
-            system.add(self, entity_id)
+            system.track(self, entity_id)
 
     def remove(self, entity_id, component_id):
-        del self.components[component_id][entity_id]
+        self.components[component_id].remove(entity_id)
         for system in self.component_to_systems[component_id]:
-            system.remove(self, entity_id)
+            system.forget(self, entity_id)
 
     def lists(self, entity_ids, component_ids):
         result = [entity_ids]
         for component_id in component_ids:
-            all_components = self.components[component_id]
-            result.append([all_components[entity_id]
-                           for entity_id in entity_ids])
+            result.append(self.components[component_id].list(entity_ids))
         return result
 
     def execute(self, update):
@@ -70,12 +149,12 @@ class System:
     def execute(self, update, registry):
         self.func(update, *self.query(registry))
 
-    def add(self, registry, entity_id):
+    def track(self, registry, entity_id):
         if not registry.has_components(entity_id, self.component_ids):
             return
         self.entity_ids.add(entity_id)
 
-    def remove(self, registry, entity_id):
+    def forget(self, registry, entity_id):
         self.entity_ids.remove(entity_id)
 
 
