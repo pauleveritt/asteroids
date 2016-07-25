@@ -137,6 +137,8 @@ def entity_ids_query(registry, entity_ids, component_ids):
 
 
 class System:
+    # XXX make query a dict and let it determine per component what to
+    # retrieve, so we can mix different component containers
     def __init__(self, func, component_ids, query=entity_ids_query):
         self.func = func
         self.component_ids = component_ids
