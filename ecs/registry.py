@@ -76,6 +76,7 @@ class Registry:
         self.components = {}
         self.systems = []
         self.component_to_systems = {}
+        self.entity_id_counter = 0
 
     def register_component(self, component_id, container=None):
         if container is None:
@@ -102,18 +103,27 @@ class Registry:
     def get(self, entity_id, component_id):
         return self.components[component_id][entity_id]
 
-    # def add_entity(self, **components):
-    #     entity_id = self.create_entity_id()
-    #     for component_id, component in components.items():
-    #         self.add(entity_id, component_id, component)
+    def create_entity_id(self):
+        result = self.entity_id_counter
+        self.entity_id_counter += 1
+        return result
 
-    def add(self, entity_id, component_id, component):
+    def add_entity(self, **components):
+        entity_id = self.create_entity_id()
+        self.add_components(entity_id, **components)
+        return entity_id
+
+    def add_components(self, entity_id, **components):
+        for component_id, component in components.items():
+            self.add_component(entity_id, component_id, component)
+
+    def add_component(self, entity_id, component_id, component):
         self.components[component_id][entity_id] = component
         for system in self.component_to_systems[component_id]:
             if self.has_components(entity_id, system.component_ids):
                 system.track(entity_id)
 
-    def remove(self, entity_id, component_id):
+    def remove_component(self, entity_id, component_id):
         del self.components[component_id][entity_id]
         for system in self.component_to_systems[component_id]:
             system.forget(entity_id)

@@ -19,17 +19,17 @@ def test_registry_system_dict():
     p2 = {'x': 20}
     p3 = {'x': 40}
 
-    r.add(1, 'position', p1)
-    r.add(2, 'position', p2)
-    r.add(3, 'position', p3)
+    r.add_component(1, 'position', p1)
+    r.add_component(2, 'position', p2)
+    r.add_component(3, 'position', p3)
 
     v1 = {'speed': 1}
     v2 = {'speed': 5}
     v4 = {'speed': 10}
 
-    r.add(1, 'velocity', v1)
-    r.add(2, 'velocity', v2)
-    r.add(4, 'velocity', v4)
+    r.add_component(1, 'velocity', v1)
+    r.add_component(2, 'velocity', v2)
+    r.add_component(4, 'velocity', v4)
 
     assert r.get(1, 'position')['x'] == 10
     assert r.get(2, 'position')['x'] == 20
@@ -42,6 +42,85 @@ def test_registry_system_dict():
     assert r.get(1, 'position')['x'] == 11
     assert r.get(2, 'position')['x'] == 25
     assert r.get(3, 'position')['x'] == 40
+
+
+def test_registry_system_dict_add_components():
+    r = Registry()
+    r.register_component('position')
+    r.register_component('velocity')
+
+    def update_position(update, entity_ids, positions, velocities):
+        assert update == 'update'
+        assert sorted(entity_ids) == [1, 2]
+        for position, velocity in zip(positions, velocities):
+            position['x'] += velocity['speed']
+
+    r.register_system(System(update_position, ['position', 'velocity']))
+
+    p1 = {'x': 10}
+    p2 = {'x': 20}
+    p3 = {'x': 40}
+
+    v1 = {'speed': 1}
+    v2 = {'speed': 5}
+    v4 = {'speed': 10}
+
+    r.add_components(1, position=p1, velocity=v1)
+    r.add_components(2, position=p2, velocity=v2)
+    r.add_components(3, position=p3)
+    r.add_components(4, velocity=v4)
+
+    assert r.get(1, 'position')['x'] == 10
+    assert r.get(2, 'position')['x'] == 20
+
+    assert r.get(1, 'velocity')['speed'] == 1
+    assert r.get(2, 'velocity')['speed'] == 5
+
+    r.execute('update')
+
+    assert r.get(1, 'position')['x'] == 11
+    assert r.get(2, 'position')['x'] == 25
+    assert r.get(3, 'position')['x'] == 40
+
+
+def test_registry_system_dict_add_entity():
+    r = Registry()
+    r.register_component('position')
+    r.register_component('velocity')
+
+    def update_position(update, entity_ids, positions, velocities):
+        assert update == 'update'
+        assert sorted(entity_ids) == [0, 1]
+        for position, velocity in zip(positions, velocities):
+            position['x'] += velocity['speed']
+
+    r.register_system(System(update_position, ['position', 'velocity']))
+
+    p1 = {'x': 10}
+    p2 = {'x': 20}
+    p3 = {'x': 40}
+
+    v1 = {'speed': 1}
+    v2 = {'speed': 5}
+    v4 = {'speed': 10}
+
+    r.add_entity(position=p1, velocity=v1)
+    r.add_entity(position=p2, velocity=v2)
+    r.add_entity(position=p3)
+    r.add_entity(velocity=v4)
+
+    assert r.get(0, 'position')['x'] == 10
+    assert r.get(1, 'position')['x'] == 20
+
+    assert r.get(0, 'velocity')['speed'] == 1
+    assert r.get(1, 'velocity')['speed'] == 5
+
+    r.execute('update')
+
+    assert r.get(0, 'position')['x'] == 11
+    assert r.get(1, 'position')['x'] == 25
+    assert r.get(2, 'position')['x'] == 40
+
 
 
 def test_registry_system_df():
@@ -63,17 +142,17 @@ def test_registry_system_df():
     p2 = {'x': 20}
     p3 = {'x': 40}
 
-    r.add(1, 'position', p1)
-    r.add(2, 'position', p2)
-    r.add(3, 'position', p3)
+    r.add_component(1, 'position', p1)
+    r.add_component(2, 'position', p2)
+    r.add_component(3, 'position', p3)
 
     v1 = {'speed': 1}
     v2 = {'speed': 5}
     v4 = {'speed': 10}
 
-    r.add(1, 'velocity', v1)
-    r.add(2, 'velocity', v2)
-    r.add(4, 'velocity', v4)
+    r.add_component(1, 'velocity', v1)
+    r.add_component(2, 'velocity', v2)
+    r.add_component(4, 'velocity', v4)
 
     assert r.get(1, 'position')['x'] == 10
     assert r.get(2, 'position')['x'] == 20
@@ -114,17 +193,17 @@ def test_registry_system_item():
     p2 = Position(20)
     p3 = Position(40)
 
-    r.add(1, 'position', p1)
-    r.add(2, 'position', p2)
-    r.add(3, 'position', p3)
+    r.add_component(1, 'position', p1)
+    r.add_component(2, 'position', p2)
+    r.add_component(3, 'position', p3)
 
     v1 = Velocity(1)
     v2 = Velocity(5)
     v4 = Velocity(10)
 
-    r.add(1, 'velocity', v1)
-    r.add(2, 'velocity', v2)
-    r.add(4, 'velocity', v4)
+    r.add_component(1, 'velocity', v1)
+    r.add_component(2, 'velocity', v2)
+    r.add_component(4, 'velocity', v4)
 
     assert r.get(1, 'position').x == 10
     assert r.get(2, 'position').x == 20
@@ -163,23 +242,23 @@ def test_registry_system_add_remove():
     p2 = Position(20)
     p3 = Position(40)
 
-    r.add(1, 'position', p1)
-    r.add(2, 'position', p2)
-    r.add(3, 'position', p3)
+    r.add_component(1, 'position', p1)
+    r.add_component(2, 'position', p2)
+    r.add_component(3, 'position', p3)
     assert s.entity_ids == set()
 
     v1 = Velocity(1)
     v2 = Velocity(5)
     v4 = Velocity(10)
 
-    r.add(1, 'velocity', v1)
+    r.add_component(1, 'velocity', v1)
     assert s.entity_ids == set([1])
-    r.add(2, 'velocity', v2)
+    r.add_component(2, 'velocity', v2)
     assert s.entity_ids == set([1, 2])
-    r.add(4, 'velocity', v4)
+    r.add_component(4, 'velocity', v4)
     assert s.entity_ids == set([1, 2])
 
-    r.remove(1, 'velocity')
+    r.remove_component(1, 'velocity')
     assert s.entity_ids == set([2])
 
 
@@ -205,11 +284,11 @@ def test_registry_system_add_remove():
 #             for x_velocity, y_velocity in [(0, -10), (10, 0),
 #                                            (0, 10), (-10, 0)]:
 #                 new_entity_id = update.create_entity_id()
-#                 update.add(new_entity_id, 'debris',
+#                 update.add_component(new_entity_id, 'debris',
 #                            Debris())
-#                 update.add(new_entity_id, 'position',
+#                 update.add_component(new_entity_id, 'position',
 #                            Position(position.x, position.y))
-#                 update.add(new_entity_id, 'velocity',
+#                 update.add_component(new_entity_id, 'velocity',
 #                            Velocity(x_velocity, y_velocity))
 
 #     class Position:
@@ -233,17 +312,17 @@ def test_registry_system_add_remove():
 #     p2 = Position(20)
 #     p3 = Position(40)
 
-#     r.add(1, 'position', p1)
-#     r.add(2, 'position', p2)
-#     r.add(3, 'position', p3)
+#     r.add_component(1, 'position', p1)
+#     r.add_component(2, 'position', p2)
+#     r.add_component(3, 'position', p3)
 
 #     v1 = Velocity(1)
 #     v2 = Velocity(5)
 #     v4 = Velocity(10)
 
-#     r.add(1, 'velocity', v1)
-#     r.add(2, 'velocity', v2)
-#     r.add(4, 'velocity', v4)
+#     r.add_component(1, 'velocity', v1)
+#     r.add_component(2, 'velocity', v2)
+#     r.add_component(4, 'velocity', v4)
 
 #     assert r.get(1, 'position').x == 10
 #     assert r.get(2, 'position').x == 20
