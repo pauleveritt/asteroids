@@ -137,17 +137,21 @@ class Registry:
             system.execute(update, self)
 
 
+def entity_ids_query(registry, entity_ids, component_ids):
+    return registry.lists(entity_ids, component_ids)
+
+
 class System:
-    def __init__(self, func, component_ids):
+    def __init__(self, func, component_ids, query=entity_ids_query):
         self.func = func
         self.component_ids = component_ids
+        self.query = query
         self.entity_ids = set()
 
-    def query(self, registry):
-        return registry.lists(list(self.entity_ids), self.component_ids)
-
     def execute(self, update, registry):
-        self.func(update, *self.query(registry))
+        self.func(
+            update,
+            *self.query(registry, list(self.entity_ids), self.component_ids))
 
     def track(self, registry, entity_id):
         if not registry.has_components(entity_id, self.component_ids):
