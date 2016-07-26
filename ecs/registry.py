@@ -170,9 +170,6 @@ class Registry:
         return [self.components[component_id]
                 for component_id in component_ids]
 
-    # XXX there should be two arguments: update and registry, i.e. the
-    # API where you can add and remove components, as we always want
-    # the latter anyway
     def execute(self, update):
         """Execute all systems.
 
@@ -182,7 +179,7 @@ class Registry:
         """
         for system in self.systems:
             containers = self.component_containers(system.component_ids)
-            system.execute(update, containers)
+            system.execute(update, self, containers)
 
 
 def container_query(component_containers, entity_ids):
@@ -220,7 +217,7 @@ class System:
         self.query = query
         self.entity_ids = set()
 
-    def execute(self, update, component_containers):
+    def execute(self, update, registry, component_containers):
         """Execute this system.
 
         Passed in are the component containers that this system can
@@ -228,7 +225,7 @@ class System:
         """
         args = ([self.entity_ids] +
                 self.query(component_containers, list(self.entity_ids)))
-        self.func(update, *args)
+        self.func(update, registry, *args)
 
     def track(self, entity_id):
         """Track entity_id with this system."""
@@ -239,9 +236,9 @@ class System:
         self.entity_ids.remove(entity_id)
 
 
-def item_func(func, update, *lists):
+def item_func(func, update, r, *lists):
     for items in zip(*lists):
-        func(update, *items)
+        func(update, r, *items)
 
 
 def item_system(func, component_ids):

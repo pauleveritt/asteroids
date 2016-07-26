@@ -8,7 +8,7 @@ def test_registry_system_dict():
     r.register_component('position')
     r.register_component('velocity')
 
-    def update_position(update, entity_ids, positions, velocities):
+    def update_position(update, r, entity_ids, positions, velocities):
         assert update == 'update'
         assert sorted(entity_ids) == [1, 2]
         for position, velocity in zip(positions, velocities):
@@ -50,7 +50,7 @@ def test_registry_system_dict_add_components():
     r.register_component('position')
     r.register_component('velocity')
 
-    def update_position(update, entity_ids, positions, velocities):
+    def update_position(update, r, entity_ids, positions, velocities):
         assert update == 'update'
         assert sorted(entity_ids) == [1, 2]
         for position, velocity in zip(positions, velocities):
@@ -89,7 +89,7 @@ def test_registry_system_dict_add_entity():
     r.register_component('position')
     r.register_component('velocity')
 
-    def update_position(update, entity_ids, positions, velocities):
+    def update_position(update, r, entity_ids, positions, velocities):
         assert update == 'update'
         assert sorted(entity_ids) == [0, 1]
         for position, velocity in zip(positions, velocities):
@@ -128,7 +128,7 @@ def test_registry_system_df():
     r.register_component('position', DataFrameContainer())
     r.register_component('velocity', DataFrameContainer())
 
-    def update_position(update, entity_ids, positions, velocities):
+    def update_position(update, r, entity_ids, positions, velocities):
         assert update == 'update'
         assert sorted(entity_ids) == [1, 2]
         positions.loc[entity_ids, 'x'] += velocities.loc[entity_ids, 'speed']
@@ -174,7 +174,7 @@ def test_registry_system_item():
 
     seen_entity_ids = set()
 
-    def update_position(update, entity_id, position, velocity):
+    def update_position(update, r, entity_id, position, velocity):
         assert update == 'update'
         seen_entity_ids.add(entity_id)
         position.x += velocity.speed
@@ -268,7 +268,7 @@ def test_registry_collision_dict():
     r.register_component('size')
     r.register_component('collision')
 
-    def update_collision(update, entity_ids, position, size):
+    def update_collision(update, r, entity_ids, position, size):
         # stupidly inefficient
         for e1, p1, s1 in zip(entity_ids, position, size):
             for e2, p2, s2 in zip(entity_ids, position, size):
@@ -276,7 +276,7 @@ def test_registry_collision_dict():
                     continue
                 if (p2['x'] + s2['s']) > (p1['x'] - s1['s']) and\
                    (p2['x'] - s2['s']) < (p1['x'] + s1['s']):
-                    update.add_component(e1, 'collision', {'other': e2})
+                    r.add_component(e1, 'collision', {'other': e2})
 
     r.register_system(System(update_collision, ['position', 'size']))
 
@@ -299,7 +299,7 @@ def test_registry_collision_df():
     r.register_component('size', DataFrameContainer())
     r.register_component('collision', DataFrameContainer())
 
-    def update_collision(update, entity_ids, position, size):
+    def update_collision(update, r, entity_ids, position, size):
         # even more stupidly inefficient
         for e1 in entity_ids:
             p1 = position.loc[e1]
@@ -311,7 +311,7 @@ def test_registry_collision_df():
                 s2 = size.loc[e2]
                 if (p2['x'] + s2['s']) > (p1['x'] - s1['s']) and\
                    (p2['x'] - s2['s']) < (p1['x'] + s1['s']):
-                    update.add_component(e1, 'collision', {'other': e2})
+                    r.add_component(e1, 'collision', {'other': e2})
 
     r.register_system(System(
         update_collision,
