@@ -11,7 +11,7 @@ class World:
 
 
 def make_world():
-    amount = 1000
+    amount = 10000
     position = pd.DataFrame({
         'x': np.random.rand(amount),
         'y': np.random.rand(amount)
@@ -31,7 +31,7 @@ def update(w, dt):
 def render(w):
     scaled = w.position * 600
     batch = pyglet.graphics.Batch()
-    flattened = [item for sublist in scaled.values for item in sublist]
+    flattened = scaled.values.flatten()
     batch.add(len(flattened) // 2, pyglet.gl.GL_POINTS, None,
               ('v2f', flattened))
     batch.draw()
