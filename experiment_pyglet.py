@@ -30,11 +30,10 @@ def update(w, dt):
 
 def render(w):
     scaled = w.position * 600
-    ints = scaled.astype(int)
     batch = pyglet.graphics.Batch()
-    for index, row in ints.iterrows():
+    for index, row in scaled.iterrows():
         batch.add(1, pyglet.gl.GL_POINTS, None,
-                  ('v2i', (row.x, row.y)))
+                  ('v2f', (row.x, row.y)))
     batch.draw()
 
 
