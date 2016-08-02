@@ -1,6 +1,29 @@
 from functools import partial
 import pandas as pd
 
+# the following functions should be easy:
+
+# a function that just gets all the component collections it requires.
+# useful for pandas.
+
+# a function that gets the component collections, filtered by the
+# intersection of entity_id. Useful for Python, not useful for pandas.
+
+# a function that gets a single instance of each component it requests.
+# useful for Python update functions, not useful for pandas.
+
+# a pure function that gets all component collections it requires, and
+# must return new copies of those component collections, including having
+# done any add and removal.
+
+# a pure function that gets the component collections, filtered by the
+# interaction of entity_ids, and returns collections with updated components,
+# plus component_id / entity_ids to remove, plus component / entity_ids to add.
+# Useful for Pandas and Python.
+
+# a pure function that *returns* a new single instance of each component it
+# requests. This is going to be stored in the collection.
+
 
 class DictContainer(dict):
     """Component container backed by dict.
