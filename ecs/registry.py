@@ -205,13 +205,6 @@ class Registry:
             system.execute(update, self, containers)
 
 
-def entity_ids_query(component_containers, entity_ids):
-    """Return entries in component_containers that match entity ids.
-    """
-    return [[container[entity_id] for entity_id in entity_ids]
-            for container in component_containers]
-
-
 class System:
     def __init__(self, func, component_ids):
         """
