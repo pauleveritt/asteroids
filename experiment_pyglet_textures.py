@@ -39,35 +39,6 @@ gold_image.anchor_x = gold_image.width // 2
 gold_image.anchor_y = gold_image.height // 2
 
 
-class TextureEnableGroup(pyglet.graphics.Group):
-    def set_state(self):
-        glEnable(GL_TEXTURE_2D)
-
-    def unset_state(self):
-        glDisable(GL_TEXTURE_2D)
-
-texture_enable_group = TextureEnableGroup()
-
-
-class CustomGroup(pyglet.graphics.Group):
-    def __init__(self, texture):
-        super().__init__(parent=texture_enable_group)
-        self.texture = texture
-        assert texture.target == GL_TEXTURE_2D
-
-    def set_state(self):
-        glBindTexture(self.texture.target, self.texture.id)
-
-    def __eq__(self, other):
-        return (self.__class__ is other.__class__ and
-                self.texture.id == other.texture.id and
-                self.texture.target == other.texture.target and
-                self.parent == other.parent)
-
-    def __hash__(self):
-        return hash((self.texture.id, self.texture.target))
-
-
 def render(w):
     scaled = w.position * 600
     x1 = scaled['x'] - gold_image.anchor_x
