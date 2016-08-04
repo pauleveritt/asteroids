@@ -14,7 +14,7 @@ class World:
 
 
 def make_world():
-    amount = 20
+    amount = 1000
     position = pd.DataFrame({
         'x': np.random.rand(amount),
         'y': np.random.rand(amount)
@@ -23,7 +23,8 @@ def make_world():
         'x_speed': np.random.randn(amount) / 10,
         'y_speed': np.random.randn(amount) / 10
     })
-    color = [255, 255, 255, 255] * amount
+    # magical 4 times multiplication to satisfy opengl quads..
+    color = [255, 255, 255, 255] * amount * 4
     texture = gold_image.texture.tex_coords * amount
     return World(position, velocity, color, texture)
 
@@ -87,7 +88,7 @@ def render(w):
                                       GL_ONE_MINUS_SRC_ALPHA)
     batch.add(len(scaled.values) * 4, GL_QUADS, group,
               ('v2f/dynamic', r),
-              ('c4B', w.color * 4),
+              ('c4B', w.color),
               ('t3f', w.texture))
     batch.draw()
 
