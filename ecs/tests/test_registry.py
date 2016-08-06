@@ -1,9 +1,53 @@
 import pytest
-from ecs.registry import (Registry, System, item_system,
-                          DataFrameContainer, container_query)
+from ecs.registry import (Registry, System, entity_ids_system, item_system,
+                          DataFrameContainer)
 
 
-def test_registry_system_dict():
+def test_registry_system_dict_container():
+    r = Registry()
+    r.register_component('position')
+    r.register_component('velocity')
+
+    def update_position(update, r, entity_ids, positions, velocities):
+        assert update == 'update'
+        assert sorted(entity_ids) == [1, 2]
+        assert list(positions.keys()) == [1, 2, 3]
+        assert list(velocities.keys()) == [1, 2, 4]
+        for entity_id in entity_ids:
+            positions[entity_id]['x'] += velocities[entity_id]['speed']
+
+    r.register_system(System(update_position, ['position', 'velocity']))
+
+    p1 = {'x': 10}
+    p2 = {'x': 20}
+    p3 = {'x': 40}
+
+    r.add_component(1, 'position', p1)
+    r.add_component(2, 'position', p2)
+    r.add_component(3, 'position', p3)
+
+    v1 = {'speed': 1}
+    v2 = {'speed': 5}
+    v4 = {'speed': 10}
+
+    r.add_component(1, 'velocity', v1)
+    r.add_component(2, 'velocity', v2)
+    r.add_component(4, 'velocity', v4)
+
+    assert r.get(1, 'position')['x'] == 10
+    assert r.get(2, 'position')['x'] == 20
+
+    assert r.get(1, 'velocity')['speed'] == 1
+    assert r.get(2, 'velocity')['speed'] == 5
+
+    r.execute('update')
+
+    assert r.get(1, 'position')['x'] == 11
+    assert r.get(2, 'position')['x'] == 25
+    assert r.get(3, 'position')['x'] == 40
+
+
+def test_registry_system_dict_entity_ids():
     r = Registry()
     r.register_component('position')
     r.register_component('velocity')
@@ -14,7 +58,8 @@ def test_registry_system_dict():
         for position, velocity in zip(positions, velocities):
             position['x'] += velocity['speed']
 
-    r.register_system(System(update_position, ['position', 'velocity']))
+    r.register_system(entity_ids_system(
+        update_position, ['position', 'velocity']))
 
     p1 = {'x': 10}
     p2 = {'x': 20}
@@ -56,7 +101,8 @@ def test_registry_system_dict_add_components():
         for position, velocity in zip(positions, velocities):
             position['x'] += velocity['speed']
 
-    r.register_system(System(update_position, ['position', 'velocity']))
+    r.register_system(entity_ids_system(
+        update_position, ['position', 'velocity']))
 
     p1 = {'x': 10}
     p2 = {'x': 20}
@@ -95,7 +141,8 @@ def test_registry_system_dict_add_entity():
         for position, velocity in zip(positions, velocities):
             position['x'] += velocity['speed']
 
-    r.register_system(System(update_position, ['position', 'velocity']))
+    r.register_system(entity_ids_system(
+        update_position, ['position', 'velocity']))
 
     p1 = {'x': 10}
     p2 = {'x': 20}
@@ -135,8 +182,7 @@ def test_registry_system_df():
 
     r.register_system(System(
         update_position,
-        ['position', 'velocity'],
-        container_query))
+        ['position', 'velocity']))
 
     p1 = {'x': 10}
     p2 = {'x': 20}
@@ -278,7 +324,8 @@ def test_registry_collision_dict():
                    (p2['x'] - s2['s']) < (p1['x'] + s1['s']):
                     r.add_component(e1, 'collision', {'other': e2})
 
-    r.register_system(System(update_collision, ['position', 'size']))
+    r.register_system(entity_ids_system(update_collision,
+                                        ['position', 'size']))
 
     e0 = r.add_entity(position={'x': 10}, size={'s': 5})
     e1 = r.add_entity(position={'x': 20}, size={'s': 5})
@@ -315,9 +362,7 @@ def test_registry_collision_df():
 
     r.register_system(System(
         update_collision,
-        ['position', 'size'],
-        container_query
-    ))
+        ['position', 'size']))
 
     e0 = r.add_entity(position={'x': 10}, size={'s': 5})
     e1 = r.add_entity(position={'x': 20}, size={'s': 5})

@@ -205,39 +205,15 @@ class Registry:
             system.execute(update, self, containers)
 
 
-def container_query(component_containers, entity_ids):
-    """Just return the complete component containers.
-
-    This returns the entire component containers and the system
-    is responsible itself to get out the proper entities.
-    """
-    return [container.value() for container in component_containers]
-
-
-def entity_ids_query(component_containers, entity_ids):
-    """Return entries in component_containers that match entity ids.
-    """
-    return [[container[entity_id] for entity_id in entity_ids]
-            for container in component_containers]
-
-
 class System:
-    # XXX make query a dict and let it determine per component what to
-    # retrieve, so we can mix different component containers
-    # Or could we base this on the kind of container is set up in the
-    # registry for each component id?
-    # what does the developer want when mixing container types?
-    def __init__(self, func, component_ids, query=entity_ids_query):
+    def __init__(self, func, component_ids):
         """
-
         :param func: a function that takes the update and component
           container arguments and updates the state accordingly.
         :param component_ids: the component ids that this system cares about.
-        :param query: how exactly to pass in component_ids
         """
         self.func = func
         self.component_ids = component_ids
-        self.query = query
         self.entity_ids = set()
 
     def execute(self, update, registry, component_containers):
@@ -247,7 +223,7 @@ class System:
         consult and update.
         """
         args = ([self.entity_ids] +
-                self.query(component_containers, list(self.entity_ids)))
+                [container.value() for container in component_containers])
         self.func(update, registry, *args)
 
     def track(self, entity_id):
@@ -259,7 +235,18 @@ class System:
         self.entity_ids.remove(entity_id)
 
 
-def item_func(func, update, r, *lists):
+def _entity_ids_func(func, update, r, entity_ids, *containers):
+    entity_ids_containers = [
+        [container[entity_id] for entity_id in entity_ids]
+        for container in containers]
+    func(update, r, entity_ids, *entity_ids_containers)
+
+
+def entity_ids_system(func, component_ids):
+    return System(partial(_entity_ids_func, func), component_ids)
+
+
+def _item_func(func, update, r, *lists):
     for items in zip(*lists):
         func(update, r, *items)
 
@@ -267,4 +254,5 @@ def item_func(func, update, r, *lists):
 def item_system(func, component_ids):
     """A system where you update individual items, not collections of them.
     """
-    return System(partial(item_func, func), component_ids)
+    return System(partial(_entity_ids_func, partial(_item_func, func)),
+                  component_ids)
