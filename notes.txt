@@ -1,0 +1,23 @@
+Simple engine library, a component based system with various ideas:
+
+https://bitbucket.org/rgaul/sel
+
+Architecture for sprite rendering:
+
+http://stackoverflow.com/questions/11402348/architecture-for-sprite-rendering-in-opengl
+
+Geometry shaders tend to be slow:
+
+http://www.joshbarczak.com/blog/?p=667
+
+Use a vertex buffer object is faster:
+
+http://www.gamedev.net/topic/673811-opengl-efficient-rendering-of-2d-sprites/
+
+Drawing lots of tiles, use a texture atlas:
+
+http://gamedev.stackexchange.com/questions/30362/drawing-lots-of-tiles-with-opengl-the-modern-way
+
+Avoiding cache misses in a tiling engine by doing swizzling:
+
+https://fgiesen.wordpress.com/2011/01/17/texture-tiling-and-swizzling/
