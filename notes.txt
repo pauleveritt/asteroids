@@ -21,3 +21,8 @@ http://gamedev.stackexchange.com/questions/30362/drawing-lots-of-tiles-with-open
 Avoiding cache misses in a tiling engine by doing swizzling:
 
 https://fgiesen.wordpress.com/2011/01/17/texture-tiling-and-swizzling/
+
+Notes about a tile engine that uses a shader:
+
+https://jaakan.nevargames.com/blog/2015/weekly-update-17/
+
