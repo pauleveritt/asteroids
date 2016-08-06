@@ -26,3 +26,6 @@ Notes about a tile engine that uses a shader:
 
 https://jaakan.nevargames.com/blog/2015/weekly-update-17/
 
+Intel whitepaper about texture atlas:
+
+https://developer.nvidia.com/sites/default/files/akamai/tools/files/Texture_Atlas_Whitepaper.pdf
