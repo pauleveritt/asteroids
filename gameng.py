@@ -38,14 +38,8 @@ class MyGame(ArcadeGame):
             self.ball_x_pixels_per_second *= -1
 
     def on_key_press(self, key, key_modifiers):
-
-        # See if the user hit Shift-Space
-        # (Key modifiers are in powers of two, so you can detect multiple
-        # modifiers by using a bit-wise 'and'.)
         if key == SPACE and key_modifiers == MOD_SHIFT:
             print(self.title + " You pressed shift-space")
-
-        # See if the user just hit space.
         elif key == SPACE:
             print(self.title + " You pressed the space bar.")
 

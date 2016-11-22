@@ -19,6 +19,10 @@ A try at a different model for arcade's Window class
 
 - Switch to pyglet batches to improve performance
 
+
+* Framerate
+* Batching
+* ABCs
 """
 from typing import List
 
@@ -36,6 +40,9 @@ class ArcadeWindow(pyglet.window.Window):
         rate = 1 / 80
         pyglet.clock.schedule_interval(self.animate, rate)
 
+        # TODO: Make this on-demand
+        self.fps_display = pyglet.clock.ClockDisplay()
+
     def animate(self, delta_time):
         self.app.animate(delta_time)
 
@@ -44,6 +51,8 @@ class ArcadeWindow(pyglet.window.Window):
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
         self.clear()
+        if self.app.show_fps:
+            self.fps_display.draw()
         self.app.on_draw()
 
     def on_key_press(self, key, key_modifiers):
@@ -53,9 +62,14 @@ class ArcadeWindow(pyglet.window.Window):
 class ArcadeGame:
     def __init__(self, width: int = 400, height: int = 400):
         self._window = ArcadeWindow(self, width=width, height=height)
+        self.show_fps: bool = True
 
     def set_update_rate(self, rate: float):
         pyglet.clock.schedule_interval(self._window.animate, rate)
+
+    @property
+    def window(self):
+        return self._window
 
     @staticmethod
     def set_background_color(color: List[int]):
