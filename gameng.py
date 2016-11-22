@@ -10,8 +10,9 @@ BALL_RADIUS = 20
 
 
 class MyGame(ArcadeGame):
-    def __init__(self, width, height):
+    def __init__(self, width, height, title):
         super().__init__(width=width, height=height)
+        self.title = title
         self.set_background_color(BLUE_GREEN)
         self.ball_x_position = BALL_RADIUS
         self.ball_x_pixels_per_second = 70
@@ -36,20 +37,19 @@ class MyGame(ArcadeGame):
                 and self.ball_x_pixels_per_second < 0:
             self.ball_x_pixels_per_second *= -1
 
-    @staticmethod
-    def on_key_press(key, key_modifiers):
+    def on_key_press(self, key, key_modifiers):
 
         # See if the user hit Shift-Space
         # (Key modifiers are in powers of two, so you can detect multiple
         # modifiers by using a bit-wise 'and'.)
         if key == SPACE and key_modifiers == MOD_SHIFT:
-            print("You pressed shift-space")
+            print(self.title + " You pressed shift-space")
 
         # See if the user just hit space.
         elif key == SPACE:
-            print("You pressed the space bar.")
+            print(self.title + " You pressed the space bar.")
 
 
 if __name__ == '__main__':
-    MyGame(SCREEN_WIDTH, SCREEN_HEIGHT)
+    MyGame(SCREEN_WIDTH, SCREEN_HEIGHT, 'My Game')
     pyglet.app.run()

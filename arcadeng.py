@@ -36,6 +36,9 @@ class ArcadeWindow(pyglet.window.Window):
         rate = 1 / 80
         pyglet.clock.schedule_interval(self.animate, rate)
 
+    def animate(self, delta_time):
+        self.app.animate(delta_time)
+
     def on_draw(self):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
         gl.glMatrixMode(gl.GL_MODELVIEW)
@@ -43,8 +46,8 @@ class ArcadeWindow(pyglet.window.Window):
         self.clear()
         self.app.on_draw()
 
-    def animate(self, delta_time):
-        self.app.animate(delta_time)
+    def on_key_press(self, key, key_modifiers):
+        self.app.on_key_press(key, key_modifiers)
 
 
 class ArcadeGame:
