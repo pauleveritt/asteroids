@@ -13,7 +13,7 @@ class World:
 
 
 def make_world():
-    amount = 100
+    amount = 1000
     position = pd.DataFrame({
         'x': np.random.rand(amount),
         'y': np.random.rand(amount)
