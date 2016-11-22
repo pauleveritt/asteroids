@@ -1,6 +1,6 @@
 import pyglet
 
-from arcadeng import ArcadeGame, BLUE_GREEN
+from arcadeng import ArcadeGame, BLUE_GREEN, GREEN
 
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 600
@@ -17,6 +17,8 @@ class MyGame(ArcadeGame):
 
     def on_draw(self):
         self.label.draw()
+        self.draw_circle_filled(self.ball_x_position, SCREEN_HEIGHT // 2,
+                                BALL_RADIUS, GREEN)
 
 
 if __name__ == '__main__':
