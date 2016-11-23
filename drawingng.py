@@ -1,4 +1,6 @@
 import math
+
+import pyglet
 from pyglet import gl
 
 from colors import Color
@@ -40,3 +42,37 @@ def draw_ellipse_filled(center_x: float, center_y: float,
     gl.glEnd()
     gl.glLoadIdentity()
 
+
+def draw_text(text: str,
+              start_x: float, start_y: float,
+              color: Color,
+              font_size: float = 12,
+              width: int = 2000,
+              align="left",
+              font_name=('Calibri', 'Arial'),
+              bold: bool = False,
+              italic: bool = False,
+              anchor_x="left",
+              anchor_y="baseline",
+              rotation=0
+              ):
+    if len(color) == 3:
+        color = (color[0], color[1], color[2], 255)
+
+    label = pyglet.text.Label(text,
+                              font_name=font_name,
+                              font_size=font_size,
+                              x=0, y=0,
+                              color=color,
+                              multiline=True,
+                              width=width,
+                              align=align,
+                              anchor_x=anchor_x,
+                              anchor_y=anchor_y,
+                              bold=bold,
+                              italic=italic)
+    gl.glLoadIdentity()
+    gl.glTranslatef(start_x, start_y, 0)
+    gl.glRotatef(rotation, 0, 0, 1)
+
+    label.draw()

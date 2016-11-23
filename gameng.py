@@ -23,7 +23,7 @@ class MyGame(ArcadeGame):
         self.draw_text("This is a simple template to start your game.",
                        10, SCREEN_HEIGHT // 2, BLACK, 20)
 
-    def animate(self, delta_time):
+    def update_model(self, delta_time):
         # Move the ball
         self.ball_x_position += self.ball_x_pixels_per_second * delta_time
 

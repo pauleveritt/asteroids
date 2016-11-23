@@ -2,26 +2,13 @@
 A try at a different model for arcade's Window class
 
 - Get rid of global window variable
-
 - Allow arcade to mediate between pyglet and a game
-
-    * Better API e.g. keypress
-
-    * Simplifications
-
+    * Better API than pyglet
     * PEP 484 typing
-
-    * Sensible defaults
-
 - Eliminate start_render()
 
-- Use ABC's to better indicate what *must* be filled in
-
-- Switch to pyglet batches to improve performance
-
-
-* Framerate
-* Batching
+Later:
+* Batching for sprites to improve performance
 * ABCs
 """
 from typing import List
@@ -30,27 +17,26 @@ import pyglet
 from pyglet import gl
 
 from colors import Color
-from drawingng import draw_ellipse_filled
+from drawingng import draw_ellipse_filled, draw_text
 
 
 class ArcadeWindow(pyglet.window.Window):
     def __init__(self, app, width: int = 400, height: int = 400):
         super().__init__(width, height)
         self.app = app
-        rate = 1 / 80
+        rate = 1 / 800
         pyglet.clock.schedule_interval(self.animate, rate)
 
         # TODO: Make this on-demand
         self.fps_display = pyglet.clock.ClockDisplay()
 
     def animate(self, delta_time):
-        self.app.animate(delta_time)
+        self.app.update_model(delta_time)
 
     def on_draw(self):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
-        self.clear()
         if self.app.show_fps:
             self.fps_display.draw()
         self.app.on_draw()
@@ -94,23 +80,9 @@ class ArcadeGame:
                   anchor_y="baseline",
                   rotation=0
                   ):
-        if len(color) == 3:
-            color = (color[0], color[1], color[2], 255)
-
-        label = pyglet.text.Label(text,
-                                  font_name=font_name,
-                                  font_size=font_size,
-                                  x=0, y=0,
-                                  color=color,
-                                  multiline=True,
-                                  width=width,
-                                  align=align,
-                                  anchor_x=anchor_x,
-                                  anchor_y=anchor_y,
-                                  bold=bold,
-                                  italic=italic)
-        gl.glLoadIdentity()
-        gl.glTranslatef(start_x, start_y, 0)
-        gl.glRotatef(rotation, 0, 0, 1)
-
-        label.draw()
+        draw_text(text=text, start_x=start_x, start_y=start_y,
+                  color=color, font_size=font_size, width=width,
+                  align=align, font_name=font_name, bold=bold,
+                  italic=italic, anchor_x=anchor_x, anchor_y=anchor_y,
+                  rotation=rotation
+                  )
